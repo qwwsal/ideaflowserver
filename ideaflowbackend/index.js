@@ -44,6 +44,26 @@ const upload = multer({ storage });
 // Парсинг JSON тела
 app.use(express.json());
 
+// Middleware для получения текущего пользователя (упрощенная версия)
+// В реальном приложении здесь должна быть проверка JWT токена или сессии
+const getCurrentUser = (req, res, next) => {
+  // Временное решение - предполагаем, что текущий пользователь передается в заголовках
+  // В реальном приложении используйте аутентификацию через JWT
+  const userId = req.headers['x-user-id'] || req.query.currentUserId;
+  
+  if (!userId) {
+    return res.status(401).json({ error: 'Пользователь не авторизован' });
+  }
+  
+  db.get('SELECT id, email, firstName, lastName, photo, description FROM Users WHERE id = ?', [userId], (err, user) => {
+    if (err || !user) {
+      return res.status(401).json({ error: 'Пользователь не найден' });
+    }
+    req.currentUser = user;
+    next();
+  });
+};
+
 // Регистрация
 app.post('/register', async (req, res) => {
   const { email, password } = req.body;
@@ -68,8 +88,19 @@ app.post('/login', (req, res) => {
     if (!user) return res.status(400).json({ error: 'Пользователь не найден' });
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ error: 'Неверный пароль' });
-    res.json({ id: user.id, email: user.email });
+    res.json({ 
+      id: user.id, 
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      photo: user.photo
+    });
   });
+});
+
+// Получение данных текущего пользователя
+app.get('/current-user', getCurrentUser, (req, res) => {
+  res.json(req.currentUser);
 });
 
 // Профиль
@@ -329,16 +360,6 @@ app.get('/projects/:id', (req, res) => {
   });
 });
 
-// Глобальный обработчик ошибок
-app.use((err, req, res, next) => {
-  console.error('Глобальная ошибка сервера:', err.stack);
-  res.status(500).json({ error: err.message || 'Внутренняя ошибка сервера' });
-});
-
-app.listen(PORT, () => {
-  console.log(`Server started on http://localhost:${PORT}`);
-});
-
 // Получить отзывы пользователя
 app.get('/reviews', (req, res) => {
   const userId = req.query.userId;
@@ -354,14 +375,14 @@ app.get('/reviews', (req, res) => {
   });
 });
 
-// Добавить новый отзыв
+// Добавить новый отзыв (обновленная версия с reviewerId)
 app.post('/reviews', (req, res) => {
-  const { userId, reviewerName, reviewerPhoto, text, rating } = req.body;
-  if (!userId || !text || !rating)
+  const { userId, reviewerId, reviewerName, reviewerPhoto, text, rating } = req.body;
+  if (!userId || !text || !rating || !reviewerId)
     return res.status(400).json({ error: 'Не все обязательные поля заполнены' });
 
-  const sql = 'INSERT INTO Reviews (userId, reviewerName, reviewerPhoto, text, rating) VALUES (?, ?, ?, ?, ?)';
-  db.run(sql, [userId, reviewerName, reviewerPhoto, text, rating], function (err) {
+  const sql = 'INSERT INTO Reviews (userId, reviewerId, reviewerName, reviewerPhoto, text, rating) VALUES (?, ?, ?, ?, ?, ?)';
+  db.run(sql, [userId, reviewerId, reviewerName, reviewerPhoto, text, rating], function (err) {
     if (err) return res.status(500).json({ error: 'Ошибка при добавлении отзыва' });
 
     db.all('SELECT * FROM Reviews WHERE userId = ?', [userId], (err, rows) => {
@@ -373,4 +394,14 @@ app.post('/reviews', (req, res) => {
 
 app.get('/', (req, res) => {
   res.send('Welcome to the API');
+});
+
+// Глобальный обработчик ошибок
+app.use((err, req, res, next) => {
+  console.error('Глобальная ошибка сервера:', err.stack);
+  res.status(500).json({ error: err.message || 'Внутренняя ошибка сервера' });
+});
+
+app.listen(PORT, () => {
+  console.log(`Server started on http://localhost:${PORT}`);
 });

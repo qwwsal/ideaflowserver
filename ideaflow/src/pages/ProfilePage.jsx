@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { FaStar } from 'react-icons/fa';
+import { FaStar, FaUpload, FaCheckCircle, FaFileAlt } from 'react-icons/fa';
 import styles from './ProfilePage.module.css';
 
 export default function ProfilePage() {
@@ -8,7 +8,7 @@ export default function ProfilePage() {
   const { userId: paramUserId } = useParams();
 
   // Использовать userId из параметра роутинга, если есть, иначе из localStorage (для своего профиля)
-  const [userId, setUserId] = useState(paramUserId || localStorage.getItem('userId'));
+  const [userId, setUserId] = useState(paramUserId || localStorage.getItem('currentUserId'));
   const [userEmail, setUserEmail] = useState('');
   const [isEditing, setIsEditing] = useState(false);
   const [activeTab, setActiveTab] = useState('projects');
@@ -135,7 +135,10 @@ export default function ProfilePage() {
   }, [userId, userEmail, navigate]);
 
   const handleLogout = () => {
-    localStorage.removeItem('userId');
+    localStorage.removeItem('currentUserId');
+    localStorage.removeItem('userEmail');
+    localStorage.removeItem('userFirstName');
+    localStorage.removeItem('userLastName');
     navigate('/');
   };
 
@@ -256,34 +259,6 @@ export default function ProfilePage() {
     }
   };
 
-  // Новый handleAddReview с отправкой на сервер
-  const handleAddReview = async () => {
-    if (newReviewText.trim() === '' || newReviewRating === 0) return;
-
-    const newReview = {
-      userId,
-      reviewerName: `${formData.firstName} ${formData.lastName}`.trim() || 'Anonymous',
-      reviewerPhoto: formData.photo || '',
-      text: newReviewText.trim(),
-      rating: newReviewRating,
-    };
-
-    try {
-      const res = await fetch('http://localhost:3001/reviews', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newReview),
-      });
-      if (!res.ok) throw new Error('Ошибка добавления отзыва');
-      setNewReviewText('');
-      setNewReviewRating(0);
-      const updatedReviews = await res.json();
-      setReviews(updatedReviews);
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
   const renderStars = rating => (
     <>
       {[...Array(5)].map((_, idx) => {
@@ -301,7 +276,7 @@ export default function ProfilePage() {
       case 'projects':
         return (
           <>
-            <h3 className={styles.projectsTitle}>Проекты пользователя (заказчик)</h3>
+            <h3 className={styles.projectsTitle}>Проекты пользователя</h3>
             <div className={`${styles.tabContent} ${styles.projectsTab}`}>
               {projectsAsCustomer.map((p) => (
                 <div key={p.id} className={styles.projectCard}>
@@ -343,7 +318,7 @@ export default function ProfilePage() {
       case 'cases':
         return (
           <div className={`${styles.tabContent} ${styles.casesTab}`}>
-            <h3>Завершённые проекты пользователя (исполнитель)</h3>
+            <h3>Завершённые проекты пользователя</h3>
             {completedExecutorProjects.length === 0 ? (
               <p>Пока пусто</p>
             ) : (
@@ -370,97 +345,39 @@ export default function ProfilePage() {
             )}
           </div>
         );
-        case 'reviews':
-  return (
-    <div className={styles.reviewContainer}>
-      <h3>
-        Отзывы пользователя{' '}
-        <span style={{ fontFamily: 'Arial', fontWeight: 'normal', fontSize: '1rem', marginLeft: '10px' }}>
-          ({averageRating} ★)
-        </span>
-      </h3>
-      <div className={styles.reviewListCustom}>
-        {reviews.length === 0 ? (
-          <p>Пока нет отзывов</p>
-        ) : (
-          reviews.map((r) => (
-            <div key={r.id} className={styles.reviewItemCustom}>
-              <div className={styles.reviewPhotoCustom}>
-                {r.reviewerPhoto ? (
-                  <img src={r.reviewerPhoto} alt={r.reviewerName} />
-                ) : (
-                  <div className={styles.userPhotoPlaceholderCustom}></div>
-                )}
-              </div>
-              <div>
-                <b>{r.reviewerName}</b>
-                <p>{r.text}</p>
-                <div>{renderStars(r.rating)}</div>
-              </div>
+      case 'reviews':
+        return (
+          <div className={styles.reviewContainer}>
+            <h3>
+              Отзывы пользователя{' '}
+              <span style={{ fontFamily: 'Arial', fontWeight: 'normal', fontSize: '1rem', marginLeft: '10px' }}>
+                ({averageRating} ★)
+              </span>
+            </h3>
+            <div className={styles.reviewListCustom}>
+              {reviews.length === 0 ? (
+                <p>Пока нет отзывов</p>
+              ) : (
+                reviews.map((r) => (
+                  <div key={r.id} className={styles.reviewItemCustom}>
+                    <div className={styles.reviewPhotoCustom}>
+                      {r.reviewerPhoto ? (
+                        <img src={`http://localhost:3001${r.reviewerPhoto}`} alt={r.reviewerName} />
+                      ) : (
+                        <div className={styles.userPhotoPlaceholderCustom}></div>
+                      )}
+                    </div>
+                    <div>
+                      <b>{r.reviewerName}</b>
+                      <p>{r.text}</p>
+                      <div>{renderStars(r.rating)}</div>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
-          ))
-        )}
-      </div>
-    </div>
-  );
-
-      // case 'reviews':
-      //   return (
-      //     <div className={styles.reviewContainer}>
-      //       <h3>
-      //         Отзывы пользователя{' '}
-      //         <span style={{ fontFamily: 'Arial', fontWeight: 'normal', fontSize: '1rem', marginLeft: '10px' }}>
-      //           ({averageRating} ★)
-      //         </span>
-      //       </h3>
-      //       <div className={styles.reviewListCustom}>
-      //         {reviews.length === 0 ? (
-      //           <p>Пока нет отзывов</p>
-      //         ) : (
-      //           reviews.map((r) => (
-      //             <div key={r.id} className={styles.reviewItemCustom}>
-      //               <div className={styles.reviewPhotoCustom}>
-      //                 {r.reviewerPhoto ? (
-      //                   <img src={r.reviewerPhoto} alt={r.reviewerName} />
-      //                 ) : (
-      //                   <div className={styles.userPhotoPlaceholderCustom}></div>
-      //                 )}
-      //               </div>
-      //               <div>
-      //                 <b>{r.reviewerName}</b>
-      //                 <p>{r.text}</p>
-      //                 <div>{renderStars(r.rating)}</div>
-      //               </div>
-      //             </div>
-      //           ))
-      //         )}
-      //       </div>
-      //       <div className={styles.reviewFormCustom}>
-      //         <textarea
-      //           placeholder="Оставьте отзыв..."
-      //           value={newReviewText}
-      //           onChange={(e) => setNewReviewText(e.target.value)}
-      //         />
-      //         <div className={styles.ratingStars}>
-      //           {[...Array(5)].map((_, index) => {
-      //             const starValue = index + 1;
-      //             return (
-      //               <FaStar
-      //                 key={index}
-      //                 size={24}
-      //                 style={{ cursor: 'pointer' }}
-      //                 color={starValue <= (hoverRating || newReviewRating) ? '#ffbe5a' : '#ccc'}
-      //                 onClick={() => setNewReviewRating(starValue)}
-      //                 onMouseEnter={() => setHoverRating(starValue)}
-      //                 onMouseLeave={() => setHoverRating(0)}
-      //               />
-      //             );
-      //           })}
-      //         </div>
-      //         <button onClick={handleAddReview}>Добавить отзыв</button>
-      //       </div>
-      //     </div>
-      //   );
+          </div>
+        );
       default:
         return null;
     }
@@ -598,30 +515,92 @@ export default function ProfilePage() {
         {renderTabContent()}
       </div>
 
-      <div className={styles.processedCase}>
-        <h3>Текущие кейсы в процессе</h3>
+      {/* КРАСИВЫЙ ИНТЕРФЕЙС ДЛЯ ТЕКУЩИХ КЕЙСОВ */}
+      <div className={styles.currentCasesSection}>
+        <div className={styles.sectionHeader}>
+          <h2 className={styles.sectionTitle}>
+            <p className={styles.sectionIcon} />
+            Текущие проекты в работе
+          </h2>
+          <p className={styles.sectionSubtitle}>Проекты, которые вы сейчас выполняете</p>
+        </div>
+
         {inProcessExecutorCases.length === 0 ? (
-          <p>Нет текущих кейсов</p>
+          <div className={styles.emptyState}>
+            <div className={styles.emptyIcon}>📝</div>
+            <h3>Нет текущих проектов</h3>
+            <p>Начните работу над проектом из раздела "Кейсы"</p>
+            <button 
+              className={styles.browseCasesButton}
+              onClick={() => navigate('/cases')}
+            >
+              Найти проекты
+            </button>
+          </div>
         ) : (
-          <div className={styles.casesGrid}>
+          <div className={styles.currentCasesGrid}>
             {inProcessExecutorCases.map(c => (
-              <div key={c.id} className={styles.caseCard}>
-                <Link to={`/processed-cases/${c.id}`} className={styles.caseLink}>
-                  <img
-                    src={`http://localhost:3001${c.cover || ''}`}
-                    alt={`Фото заказчика ${c.userEmail}`}
-                    className={styles.caseImage}
-                  />
-                  <div className={styles.caseInfo}>
-                    <div className={styles.casePerformer}>{c.userEmail || 'Не указан'}</div>
-                    <div className={styles.caseTopic}>{c.theme}</div>
-                    <div className={styles.caseTitle}>{c.title}</div>
+              <div key={c.id} className={styles.currentCaseCard}>
+                <div className={styles.caseHeader}>
+                  <Link to={`/processed-cases/${c.id}`} className={styles.caseLink}>
+                    <img
+                      src={`http://localhost:3001${c.cover || '/images/default-case.jpg'}`}
+                      alt={`Обложка проекта ${c.title}`}
+                      className={styles.currentCaseImage}
+                    />
+                  </Link>
+                  <div className={styles.caseStatus}>
+                    <span className={styles.statusBadge}>В процессе</span>
                   </div>
-                </Link>
-                <div style={{ marginTop: 10 }}>
-                  <input type="file" multiple onChange={(e) => handleFileSelect(c.id, e)} />
-                  <button onClick={() => handleAddFiles(c.id)}>Дополнить</button>
-                  <button onClick={() => handleCompleteCase(c.id)}>Готово</button>
+                </div>
+
+                <div className={styles.currentCaseInfo}>
+                  <Link to={`/processed-cases/${c.id}`} className={styles.caseLink}>
+                    <h4 className={styles.currentCaseTitle}>{c.title}</h4>
+                    <p className={styles.currentCaseTheme}>{c.theme}</p>
+                    <div className={styles.clientInfo}>
+                      <span className={styles.clientLabel}>Заказчик:</span>
+                      <span className={styles.clientEmail}>{c.userEmail}</span>
+                    </div>
+                  </Link>
+
+                  <div className={styles.caseActions}>
+                    <div className={styles.fileUploadSection}>
+                      <label className={styles.fileUploadLabel}>
+                        <FaUpload className={styles.uploadIcon} />
+                        Добавить файлы
+                        <input
+                          type="file"
+                          multiple
+                          onChange={(e) => handleFileSelect(c.id, e)}
+                          className={styles.hiddenFileInput}
+                        />
+                      </label>
+                      {selectedFiles[c.id] && (
+                        <span className={styles.fileCount}>
+                          {selectedFiles[c.id].length} файл(ов)
+                        </span>
+                      )}
+                    </div>
+
+                    <div className={styles.actionButtonsGroup}>
+                      <button
+                        onClick={() => handleAddFiles(c.id)}
+                        className={styles.addFilesButton}
+                        disabled={!selectedFiles[c.id]}
+                      >
+                        <FaUpload className={styles.buttonIcon} />
+                        Загрузить
+                      </button>
+                      <button
+                        onClick={() => handleCompleteCase(c.id)}
+                        className={styles.completeButton}
+                      >
+                        <FaCheckCircle className={styles.buttonIcon} />
+                        Завершить
+                      </button>
+                    </div>
+                  </div>
                 </div>
               </div>
             ))}
@@ -641,9 +620,9 @@ export default function ProfilePage() {
             <p>+7 (123) 456-78-90</p>
           </div>
           <div className={styles.footerSocials}>
-            <a href="#"><img src="images/facebook.svg" alt="Facebook" /></a>
-            <a href="#"><img src="images/twitterx.svg" alt="Twitter" /></a>
-            <a href="#"><img src="images/instagram.svg" alt="Instagram" /></a>
+            <a href="#"><img src="/images/facebook.svg" alt="Facebook" /></a>
+            <a href="#"><img src="/images/twitterx.svg" alt="Twitter" /></a>
+            <a href="#"><img src="/images/instagram.svg" alt="Instagram" /></a>
           </div>
         </div>
         <p style={{ fontSize: 20, textAlign: 'center', marginTop: 10 }}>

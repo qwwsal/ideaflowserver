@@ -1,5 +1,5 @@
 body {
-  background-color: #0E900E;
+  background-color: #F5F5F5;
 }
 
 .header {
@@ -249,6 +249,7 @@ h1{
 
 .tabButton {
   padding: 20px 20px;
+  margin: 0px 20px;
   border-radius: 20px 20px 0px 0px;
   border: none;
   font-weight: 700;
@@ -285,6 +286,7 @@ h1{
   background-color: #0E900E;
   border-radius: 0px 0px 20px 20px;
   padding: 20px;
+  margin: 0px 20px;
   flex-grow: 1;
   color: #F5F5F5;
   display: grid;
@@ -338,7 +340,7 @@ h1{
   color: #f5f5f5;
   background-color: #0E900E;
   padding: 20px 20px 0px 20px;
-  margin: 0px;
+  margin: 0px 20px;
 }
 
 
@@ -347,6 +349,7 @@ h1{
   background-color: #FBBB13;
   border-radius: 0px 0px 20px 20px;
   padding: 10px;
+  margin: 0px 20px;
   flex-grow: 1;
   color: #f5f5f5;
 }
@@ -418,6 +421,7 @@ h1{
   background-color: #A24B00;
   border-radius: 0 0 20px 20px;
   padding: 10px;
+  margin: 0px 20px;
   flex-grow: 1;
   color: #f5f5f5;
   display: flex;
@@ -512,6 +516,302 @@ font-family: 'Geoform';
   margin: 0px 10px;
 }
 
+.currentCasesSection {
+  background: #f5f5f5;
+  padding: 40px 40px;
+  margin: 40px 0px;
+  border-radius: 20px;
+}
+
+.sectionHeader {
+  text-align: center;
+  margin-bottom: 40px;
+}
+
+.sectionTitle {
+  font-family: 'Geoform';
+  font-size: 32px;
+  font-weight: 700;
+  color: #0E900E;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+}
+
+.sectionIcon {
+  color: #FBBB13;
+  font-size: 28px;
+}
+
+.sectionSubtitle {
+  font-family: 'Geoform';
+  font-size: 18px;
+  color: #666;
+  margin: 0;
+}
+
+.emptyState {
+  text-align: center;
+  padding: 60px 20px;
+  background: white;
+  border-radius: 20px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.emptyIcon {
+  font-size: 64px;
+  margin-bottom: 20px;
+}
+
+.emptyState h3 {
+  font-family: 'Geoform';
+  font-size: 24px;
+  color: #0E900E;
+  margin-bottom: 12px;
+}
+
+.emptyState p {
+  font-family: 'Geoform';
+  color: #666;
+  margin-bottom: 24px;
+  font-size: 16px;
+}
+
+.browseCasesButton {
+  background-color: #FBBB13;
+  color: #0E900E;
+  font-family: 'Malik Trial';
+  font-weight: 700;
+  border: none;
+  padding: 14px 28px;
+  border-radius: 16px;
+  cursor: pointer;
+  font-size: 16px;
+  transition: all 0.3s ease;
+}
+
+.browseCasesButton:hover {
+  background-color: #e6a813;
+  transform: translateY(-2px);
+}
+
+.currentCasesGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 30px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.currentCaseCard {
+  background: white;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  border: 2px solid #f0f0f0;
+}
+
+.currentCaseCard:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+  border-color: #FBBB13;
+}
+
+.caseHeader {
+  position: relative;
+}
+
+.currentCaseImage {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  display: block;
+}
+
+.caseStatus {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+}
+
+.statusBadge {
+  background: #FBBB13;
+  color: #0E900E;
+  font-family: 'Malik Trial';
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.currentCaseInfo {
+  padding: 24px;
+}
+
+.caseLink {
+  text-decoration: none;
+  color: inherit;
+}
+
+.currentCaseTitle {
+  font-family: 'Geoform';
+  font-size: 20px;
+  font-weight: 700;
+  color: #0E900E;
+  margin-bottom: 8px;
+  line-height: 1.3;
+}
+
+.currentCaseTheme {
+  font-family: 'Geoform';
+  font-size: 14px;
+  color: #FBBB13;
+  font-weight: 600;
+  margin-bottom: 16px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.clientInfo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.clientLabel {
+  font-family: 'Geoform';
+  font-size: 14px;
+  color: #666;
+  font-weight: 600;
+}
+
+.clientEmail {
+  font-family: 'Geoform';
+  font-size: 14px;
+  color: #0E900E;
+  font-weight: 600;
+}
+
+.caseActions {
+  border-top: 1px solid #f0f0f0;
+  padding-top: 20px;
+}
+
+.fileUploadSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.fileUploadLabel {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: #f8f9fa;
+  padding: 10px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-family: 'Geoform';
+  font-size: 14px;
+  font-weight: 600;
+  color: #0E900E;
+  border: 2px dashed #0E900E;
+  transition: all 0.3s ease;
+}
+
+.fileUploadLabel:hover {
+  background: #e8f5e8;
+}
+
+.uploadIcon {
+  font-size: 16px;
+}
+
+.hiddenFileInput {
+  display: none;
+}
+
+.fileCount {
+  font-family: 'Geoform';
+  font-size: 12px;
+  color: #666;
+  background: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 8px;
+}
+
+.actionButtonsGroup {
+  display: flex;
+  gap: 12px;
+}
+
+.addFilesButton, .completeButton {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  font-family: 'Malik Trial';
+  font-weight: 700;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex: 1;
+  justify-content: center;
+}
+
+.addFilesButton {
+  background: #0E900E;
+  color: white;
+}
+
+.addFilesButton:hover:not(:disabled) {
+  background: #0d7c0d;
+  transform: translateY(-2px);
+}
+
+.addFilesButton:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.completeButton {
+  background: #FBBB13;
+  color: #0E900E;
+}
+
+.completeButton:hover {
+  background: #e6a813;
+  transform: translateY(-2px);
+}
+
+.buttonIcon {
+  font-size: 14px;
+}
+
+/* Адаптивность */
+@media (max-width: 768px) {
+  .currentCasesGrid {
+    grid-template-columns: 1fr;
+  }
+  
+  .actionButtonsGroup {
+    flex-direction: column;
+  }
+  
+  .sectionTitle {
+    font-size: 24px;
+  }
+}
 
 .footer {
   background-color: #0E900E;

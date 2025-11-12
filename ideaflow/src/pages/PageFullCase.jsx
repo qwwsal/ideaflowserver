@@ -10,7 +10,7 @@ export default function PageFullCase() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem('currentUserId');
 
   useEffect(() => {
     setLoading(true);
@@ -80,9 +80,11 @@ export default function PageFullCase() {
           <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
+          {/* СВОЙ профиль - оставляем как есть */}
           <Link to="/profile">Профиль</Link>
           <Link to="/cases">Кейсы</Link>
           <Link to="/projects">Проекты</Link>
+          {/* СВОЙ профиль - оставляем как есть */}
           <Link to="/profile">
             <button className={styles.buttonYellow}>Разместить проект</button>
           </Link>
@@ -95,7 +97,16 @@ export default function PageFullCase() {
       <main className={styles.container}>
         <h1 className={styles.title}>{caseData.title}</h1>
         {caseData.cover && <img src={`http://localhost:3001${caseData.cover}`} alt="Обложка" className={styles.cover} />}
-        <p><b>Заказчик:</b> {caseData.userEmail}</p>
+        <p><b>Заказчик:</b> 
+          {caseData.userId ? (
+            // ИЗМЕНЕНИЕ: ссылка на ЧУЖОЙ профиль
+            <Link to={`/profileview/${caseData.userId}`}>
+              {caseData.userEmail}
+            </Link>
+          ) : (
+            caseData.userEmail
+          )}
+        </p>
         <p><b>Исполнитель:</b> {caseData.executorEmail || 'Не назначен'}</p>
         <p><b>Тема:</b> {caseData.theme}</p>
         <p><b>Задача проекта:</b> {caseData.description}</p>
@@ -103,11 +114,15 @@ export default function PageFullCase() {
         <div className={styles.filesSection}>
           <b>Прикрепленные файлы:</b>
           <div className={styles.filesList}>
-            {caseData.files && caseData.files.map((file, i) => (
-              <a key={i} href={`http://localhost:3001${file}`} target="_blank" rel="noreferrer" className={styles.fileItem}>
-                {file.split('/').pop()}
-              </a>
-            ))}
+            {caseData.files && caseData.files.length > 0 ? (
+              caseData.files.map((file, i) => (
+                <a key={i} href={`http://localhost:3001${file}`} target="_blank" rel="noreferrer" className={styles.fileItem}>
+                  {file.split('/').pop()}
+                </a>
+              ))
+            ) : (
+              <p>Файлы отсутствуют</p>
+            )}
           </div>
         </div>
 
@@ -115,7 +130,7 @@ export default function PageFullCase() {
           <button className={styles.acceptButton} onClick={acceptCase}>Принять кейс</button>
         )}
 
-        <p>Статус: {caseData.status}</p>
+        <p><b>Статус:</b> {caseData.status}</p>
       </main>
 
       <footer className={styles.footer}>

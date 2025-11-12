@@ -8,7 +8,7 @@ export default function HomePage() {
   const [openProjects, setOpenProjects] = useState([]);
   const navigate = useNavigate();
   
-  const userId = localStorage.getItem('userId');
+  const userId = localStorage.getItem('currentUserId');
 
   useEffect(() => {
   // Загрузить завершенные проекты
@@ -49,7 +49,7 @@ export default function HomePage() {
     <>
       <header className={styles.header}>
         <Link to="/">
-          <img src="images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
+          <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
           <Link to={userId ? "/profile" : "/signin"}>Профиль</Link>
@@ -65,7 +65,7 @@ export default function HomePage() {
       </header>
 
       <section className={styles.sectionIntro}>
-        <img src="images/hand.svg" alt="Lightbulb in hand" />
+        <img src="/images/hand.svg" alt="Lightbulb in hand" />
         <div className={styles.textContainer}>
           <h1>IdeaFlow</h1>
           <p>— где идеи встречают исполнение</p>
@@ -76,7 +76,6 @@ export default function HomePage() {
         <div
           className={styles.projectsContainer}
           style={{
-            // background: 'linear-gradient(to bottom, #0E900E 10%, #F5F5F5 10%)',
             width: '100%',
             transition: 'background-color 0.3s ease',
           }}
@@ -112,14 +111,14 @@ export default function HomePage() {
           </p>
 
           <div className={styles.projectsGrid}>
-            {projectList.map(({ id, userEmail, performerEmail, theme, cover }) => (
+            {projectList.map(({ id, userEmail, performerEmail, theme, cover, title }) => (
               activeTab === 'done' ? (
                 <Link key={id} to={`/projects/${id}`} className={styles.projectCardLink}>
                   <div className={styles.projectCard}>
                     {cover && <img src={`http://localhost:3001${cover}`} alt={`Фото исполнителя ${performerEmail}`} />}
                     <div style={{ padding: '8px' }}>
                       <span>{performerEmail}</span><br />
-                      <span>{theme}</span>
+                      <span>{theme || title}</span>
                     </div>
                   </div>
                 </Link>
@@ -129,7 +128,7 @@ export default function HomePage() {
                     {cover && <img src={`http://localhost:3001${cover}`} alt={`Фото заказчика ${userEmail}`} />}
                     <div style={{ padding: '8px' }}>
                       <span>{userEmail}</span><br />
-                      <span>{theme}</span>
+                      <span>{theme || title}</span>
                     </div>
                   </div>
                 </Link>
@@ -150,7 +149,7 @@ export default function HomePage() {
           <p>
             IdeaFlow помогает быстро находить исполнителей для любых творческих и технических проектов, облегчая процесс поиска и сотрудничества.
           </p>
-          <img src="images/womenwhithlamp.svg" alt="Woman holding lightbulbs" />
+          <img src="/images/womenwhithlamp.svg" alt="Woman holding lightbulbs" />
         </section>
 
         <section className={styles.sectionPartnership}>
@@ -163,7 +162,7 @@ export default function HomePage() {
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerLogo}>
-            <img src="images/logobig.svg" alt="Big Logo" />
+            <img src="/images/logobig.svg" alt="Big Logo" />
           </div>
           <div className={styles.footerContacts}>
             Связаться с нами <br />

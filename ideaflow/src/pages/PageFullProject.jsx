@@ -43,9 +43,11 @@ export default function PageFullProject() {
           <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
+          {/* СВОЙ профиль - оставляем как есть */}
           <Link to="/profile">Профиль</Link>
           <Link to="/cases">Кейсы</Link>
           <Link to="/projects">Проекты</Link>
+          {/* СВОЙ профиль - оставляем как есть */}
           <Link to="/profile">
             <button className={styles.buttonYellow}>Разместить проект</button>
           </Link>
@@ -64,7 +66,16 @@ export default function PageFullProject() {
             className={styles.cover}
           />
         )}
-        <p><b>Заказчик:</b> {projectData.userEmail}</p>
+        <p><b>Заказчик:</b> 
+          {projectData.userId ? (
+            // ИЗМЕНЕНИЕ: ссылка на ЧУЖОЙ профиль
+            <Link to={`/profileview/${projectData.userId}`}>
+              {projectData.userEmail}
+            </Link>
+          ) : (
+            projectData.userEmail
+          )}
+        </p>
         <p><b>Исполнитель:</b> {projectData.executorEmail || 'Не назначен'}</p>
         <p><b>Тема:</b> {projectData.theme}</p>
         <p><b>Описание проекта:</b> {projectData.description}</p>
@@ -72,21 +83,25 @@ export default function PageFullProject() {
         <div className={styles.filesSection}>
           <b>Прикрепленные файлы:</b>
           <div className={styles.filesList}>
-            {projectData.files && projectData.files.map((file, i) => (
-              <a
-                key={i}
-                href={`http://localhost:3001${file}`}
-                target="_blank"
-                rel="noreferrer"
-                className={styles.fileItem}
-              >
-                {file.split('/').pop()}
-              </a>
-            ))}
+            {projectData.files && projectData.files.length > 0 ? (
+              projectData.files.map((file, i) => (
+                <a
+                  key={i}
+                  href={`http://localhost:3001${file}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className={styles.fileItem}
+                >
+                  {file.split('/').pop()}
+                </a>
+              ))
+            ) : (
+              <p>Файлы отсутствуют</p>
+            )}
           </div>
         </div>
 
-        <p>Статус: {projectData.status}</p>
+        <p><b>Статус:</b> {projectData.status}</p>
       </main>
 
       <footer className={styles.footer}>

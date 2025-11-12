@@ -19,8 +19,11 @@ export default function RegisterPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Ошибка регистрации');
-      // Можно при регистрации сразу сохранить id для сессии
-      localStorage.setItem('userId', data.id);
+      
+      // Сохраняем данные пользователя для сессии
+      localStorage.setItem('currentUserId', data.id);
+      localStorage.setItem('userEmail', data.email);
+      
       navigate('/profile');
     } catch (err) {
       setError(err.message);

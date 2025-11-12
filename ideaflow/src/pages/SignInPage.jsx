@@ -19,8 +19,13 @@ export default function SignInPage() {
       });
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || 'Ошибка входа');
-      // Сохраняем id пользователя для сессии
-      localStorage.setItem('userId', data.id);
+      
+      // Сохраняем данные пользователя для сессии
+      localStorage.setItem('currentUserId', data.id);
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userFirstName', data.firstName || '');
+      localStorage.setItem('userLastName', data.lastName || '');
+      
       navigate('/profile');
     } catch (err) {
       setError(err.message);

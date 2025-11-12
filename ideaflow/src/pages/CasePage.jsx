@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ProjectsPage.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function CasePage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8,6 +8,7 @@ export default function CasePage() {
   const [selectedTopics, setSelectedTopics] = useState([]);
   const [cases, setCases] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -23,7 +24,13 @@ export default function CasePage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const topics = ['Мобильное приложение', 'Веб-приложение', 'Редизайн сайта', 'Брендинг'];
+  const topics = [
+    'Разработка логотипа',
+    'Разработка полиграфической продукции',
+    'Разработка сайта',
+    'Разработка дизайна сайта',
+    'Верстка сайта'
+  ];
 
   const toggleTopic = (topic) => {
     if (selectedTopics.includes(topic)) {
@@ -33,24 +40,33 @@ export default function CasePage() {
     }
   };
 
-  const filteredCases = cases.filter(({ title, theme, description, cover, files, status, executorId, userId, userEmail, executorEmail }) => {
+  const filteredCases = cases.filter(caseItem => {
     const lowerSearch = searchTerm.toLowerCase();
 
+    // Поиск по всем текстовым полям кроме ID
     const matchesSearch =
-      (title?.toLowerCase() || '').includes(lowerSearch) ||
-      (theme?.toLowerCase() || '').includes(lowerSearch) ||
-      (description?.toLowerCase() || '').includes(lowerSearch) ||
-      (cover?.toLowerCase() || '').includes(lowerSearch) ||
-      (status?.toLowerCase() || '').includes(lowerSearch) ||
-      (executorId !== undefined ? String(executorId).includes(lowerSearch) : false) ||
-      (userEmail?.toLowerCase() || '').includes(lowerSearch) ||
-      (executorEmail?.toLowerCase() || '').includes(lowerSearch);
+      (caseItem.title?.toLowerCase() || '').includes(lowerSearch) ||
+      (caseItem.theme?.toLowerCase() || '').includes(lowerSearch) ||
+      (caseItem.description?.toLowerCase() || '').includes(lowerSearch) ||
+      (caseItem.status?.toLowerCase() || '').includes(lowerSearch) ||
+      (caseItem.userEmail?.toLowerCase() || '').includes(lowerSearch) ||
+      (caseItem.executorEmail?.toLowerCase() || '').includes(lowerSearch);
 
-    const matchesTopic = selectedTopics.length === 0 || selectedTopics.includes(theme);
-    const matchesStatus = status === 'open';
+    // Фильтрация по темам
+    const matchesTopic = selectedTopics.length === 0 || 
+                        (caseItem.theme && selectedTopics.includes(caseItem.theme));
+
+    // Фильтрация по статусу (только открытые кейсы)
+    const matchesStatus = caseItem.status === 'open';
 
     return matchesSearch && matchesTopic && matchesStatus;
   });
+
+  const handleProfileClick = (e, userId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/profileview/${userId}`);
+  };
 
   if (loading) return <p className={styles.loadingText}>Загрузка кейсов...</p>;
 
@@ -58,7 +74,7 @@ export default function CasePage() {
     <>
       <header className={styles.header}>
         <Link to="/">
-          <img src="images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
+          <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
           <Link to="/profile">Профиль</Link>
@@ -78,18 +94,18 @@ export default function CasePage() {
         <div className={styles.projectsControls}>
           <button className={styles.projectsFilter} onClick={() => setFilterOpen(true)}>
             Фильтр
-            <img src="images/filter-icon.svg" alt="Фильтр" className={styles.filterIcon} />
+            <img src="/images/filter-icon.svg" alt="Фильтр" className={styles.filterIcon} />
           </button>
           <div className={styles.projectsSearchWrapper}>
             <input
               className={styles.projectsSearch}
               type="text"
-              placeholder="Поиск"
+              placeholder="Поиск по названию, теме, описанию..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button className={styles.projectsSearchBtn}>
-              <img src="images/search-icon.svg" alt="Поиск" className={styles.searchIcon} />
+              <img src="/images/search-icon.svg" alt="Поиск" className={styles.searchIcon} />
             </button>
           </div>
         </div>
@@ -143,23 +159,34 @@ export default function CasePage() {
                 <div className={styles.projectInfo}>
                   <div className={styles.projectPerformer}>
                     Заказчик:{' '}
-                    {/* Здесь убрали вложенный Link в Link: заменено на span с Link вне карточки */}
-                    <span>
-                      <Link to={`/profileview/${caseItem.userId}`}>
+                    {caseItem.userId ? (
+                      <span 
+                        className={styles.profileLink}
+                        onClick={(e) => handleProfileClick(e, caseItem.userId)}
+                        style={{color: '#007bff', cursor: 'pointer', textDecoration: 'underline'}}
+                      >
                         {caseItem.userEmail || 'Не указан'}
-                      </Link>
-                    </span>
+                      </span>
+                    ) : (
+                      caseItem.userEmail || 'Не указан'
+                    )}
                   </div>
                   <div className={styles.projectTitle}>Название: {caseItem.title}</div>
                   <div className={styles.projectTopic}>Тема: {caseItem.theme || 'Не указана'}</div>
                   {caseItem.executorId && (
                     <div className={styles.projectPerformer}>
                       Исполнитель:{' '}
-                      <span>
-                        <Link to={`/profileview/${caseItem.executorId}`}>
+                      {caseItem.executorId ? (
+                        <span 
+                          className={styles.profileLink}
+                          onClick={(e) => handleProfileClick(e, caseItem.executorId)}
+                          style={{color: '#007bff', cursor: 'pointer', textDecoration: 'underline'}}
+                        >
                           {caseItem.executorEmail || 'Не указан'}
-                        </Link>
-                      </span>
+                        </span>
+                      ) : (
+                        caseItem.executorEmail || 'Не указан'
+                      )}
                     </div>
                   )}
                 </div>
@@ -172,7 +199,7 @@ export default function CasePage() {
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerLogo}>
-            <img src="images/logobig.svg" alt="Big Logo" />
+            <img src="/images/logobig.svg" alt="Big Logo" />
           </div>
           <div className={styles.footerContacts}>
             Связаться с нами <br />
@@ -181,9 +208,9 @@ export default function CasePage() {
             <p>+7 (123) 456-78-90</p>
           </div>
           <div className={styles.footerSocials}>
-            <a href="#"><img src="images/facebook.svg" alt="Facebook" /></a>
-            <a href="#"><img src="images/twitterx.svg" alt="Twitter" /></a>
-            <a href="#"><img src="images/instagram.svg" alt="Instagram" /></a>
+            <a href="#"><img src="/images/facebook.svg" alt="Facebook" /></a>
+            <a href="#"><img src="/images/twitterx.svg" alt="Twitter" /></a>
+            <a href="#"><img src="/images/instagram.svg" alt="Instagram" /></a>
           </div>
         </div>
         <p style={{ fontSize: 20, textAlign: 'center', marginTop: 10 }}>

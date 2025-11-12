@@ -32,7 +32,7 @@ export default function AddCasePage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
 
-    const userId = localStorage.getItem('userId');
+    const userId = localStorage.getItem('currentUserId');
     if (!userId) {
       alert('Вы не авторизованы');
       navigate('/signin');
@@ -69,7 +69,7 @@ export default function AddCasePage() {
     <>
       <header className={styles.header}>
         <Link to="/">
-          <img src="images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
+          <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
           <Link to="/profile">Профиль</Link>
@@ -155,7 +155,7 @@ export default function AddCasePage() {
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerLogo}>
-            <img src="images/logobig.svg" alt="Big Logo" />
+            <img src="/images/logobig.svg" alt="Big Logo" />
           </div>
           <div className={styles.footerContacts}>
             Связаться с нами <br />
@@ -165,13 +165,13 @@ export default function AddCasePage() {
           </div>
           <div className={styles.footerSocials}>
             <a href="#">
-              <img src="images/facebook.svg" alt="Facebook" />
+              <img src="/images/facebook.svg" alt="Facebook" />
             </a>
             <a href="#">
-              <img src="images/twitterx.svg" alt="Twitter" />
+              <img src="/images/twitterx.svg" alt="Twitter" />
             </a>
             <a href="#">
-              <img src="images/instagram.svg" alt="Instagram" />
+              <img src="/images/instagram.svg" alt="Instagram" />
             </a>
           </div>
         </div>

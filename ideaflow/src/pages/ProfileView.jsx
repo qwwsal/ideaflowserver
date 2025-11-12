@@ -8,6 +8,7 @@ export default function ProfileView() {
   const { userId: paramUserId } = useParams();
 
   const [userId, setUserId] = useState(paramUserId);
+  const [currentUserId, setCurrentUserId] = useState(null); // ID авторизованного пользователя
   const [userEmail, setUserEmail] = useState('');
   const [activeTab, setActiveTab] = useState('projects');
   const [formData, setFormData] = useState({
@@ -16,6 +17,11 @@ export default function ProfileView() {
     lastName: '',
     username: '',
     about: '',
+  });
+  const [currentUserData, setCurrentUserData] = useState({ // Данные авторизованного пользователя
+    firstName: '',
+    lastName: '',
+    photo: '',
   });
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
@@ -27,6 +33,51 @@ export default function ProfileView() {
   const [newReviewText, setNewReviewText] = useState('');
   const [newReviewRating, setNewReviewRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
+  const [validationErrors, setValidationErrors] = useState({
+    text: '',
+    rating: ''
+  });
+
+  // Проверяем авторизацию при загрузке компонента
+  useEffect(() => {
+    const checkAuth = () => {
+      const storedUserId = localStorage.getItem('currentUserId');
+      if (!storedUserId) {
+        navigate('/signin');
+        return;
+      }
+      setCurrentUserId(storedUserId);
+    };
+
+    checkAuth();
+  }, [navigate]);
+
+  // Получаем данные текущего авторизованного пользователя
+  useEffect(() => {
+    const fetchCurrentUser = async () => {
+      try {
+        const storedUserId = localStorage.getItem('currentUserId');
+        if (storedUserId) {
+          const res = await fetch(`http://localhost:3001/profile/${storedUserId}`);
+          if (res.ok) {
+            const userData = await res.json();
+            setCurrentUserId(userData.id);
+            setCurrentUserData({
+              firstName: userData.firstName || '',
+              lastName: userData.lastName || '',
+              photo: userData.photo || '',
+            });
+          }
+        }
+      } catch (err) {
+        console.error('Ошибка получения данных текущего пользователя:', err);
+      }
+    };
+
+    if (currentUserId) {
+      fetchCurrentUser();
+    }
+  }, [currentUserId]);
 
   useEffect(() => {
     if (!userId) {
@@ -119,7 +170,7 @@ export default function ProfileView() {
         const data = await response.json();
         setReviews(data);
       } catch (err) {
-        console.error(err);
+        console.error('Ошибка загрузки отзывов:', err);
       }
     };
 
@@ -143,14 +194,50 @@ export default function ProfileView() {
   const averageRating =
     reviews.length > 0 ? (reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length).toFixed(1) : 0;
 
-  // Новый handleAddReview с отправкой на сервер
+  const validateReview = () => {
+    const errors = {
+      text: '',
+      rating: ''
+    };
+
+    if (newReviewText.trim() === '') {
+      errors.text = 'Пожалуйста, напишите текст отзыва';
+    }
+
+    if (newReviewRating === 0) {
+      errors.rating = 'Пожалуйста, выберите оценку';
+    }
+
+    setValidationErrors(errors);
+    return !errors.text && !errors.rating;
+  };
+
   const handleAddReview = async () => {
-    if (newReviewText.trim() === '' || newReviewRating === 0) return;
+    // Сбрасываем ошибки
+    setValidationErrors({ text: '', rating: '' });
+
+    // Проверяем валидацию
+    if (!validateReview()) {
+      return;
+    }
+
+    // Проверяем, что текущий пользователь авторизован
+    if (!currentUserId) {
+      alert('Необходимо авторизоваться для оставления отзыва');
+      return;
+    }
+
+    // ДОПОЛНИТЕЛЬНАЯ ПРОВЕРКА: что пользователь не оставляет отзыв самому себе
+    if (currentUserId === userId) {
+      alert('Нельзя оставлять отзыв самому себе');
+      return;
+    }
 
     const newReview = {
-      userId,
-      reviewerName: `${formData.firstName} ${formData.lastName}`.trim() || 'Anonymous',
-      reviewerPhoto: formData.photo || '',
+      userId, // ID пользователя, для которого оставляем отзыв
+      reviewerId: currentUserId, // ID авторизованного пользователя
+      reviewerName: `${currentUserData.firstName} ${currentUserData.lastName}`.trim() || 'Anonymous',
+      reviewerPhoto: currentUserData.photo || '',
       text: newReviewText.trim(),
       rating: newReviewRating,
     };
@@ -166,17 +253,24 @@ export default function ProfileView() {
       setNewReviewRating(0);
       const updatedReviews = await res.json();
       setReviews(updatedReviews);
+      // Сбрасываем ошибки после успешного добавления
+      setValidationErrors({ text: '', rating: '' });
     } catch (err) {
+      console.error('Ошибка добавления отзыва:', err);
       alert(err.message);
     }
   };
 
   const formatReviewerPhoto = (photoPath) => {
     if (!photoPath) return null;
-    // Если фото уже с сервера (начинается с /), добавим условно хост
     if (photoPath.startsWith('http')) return photoPath;
     if (photoPath.startsWith('/')) return `http://localhost:3001${photoPath}`;
     return photoPath;
+  };
+
+  // Функция для проверки, является ли профиль собственным
+  const isOwnProfile = () => {
+    return currentUserId && userId && currentUserId.toString() === userId.toString();
   };
 
   const renderTabContent = () => {
@@ -284,30 +378,79 @@ export default function ProfileView() {
                 ))
               )}
             </div>
-            <div className={styles.reviewFormCustom}>
-              <textarea
-                placeholder="Оставьте отзыв..."
-                value={newReviewText}
-                onChange={(e) => setNewReviewText(e.target.value)}
-              />
-              <div className={styles.ratingStars}>
-                {[...Array(5)].map((_, index) => {
-                  const starValue = index + 1;
-                  return (
-                    <FaStar
-                      key={index}
-                      size={24}
-                      style={{ cursor: 'pointer' }}
-                      color={starValue <= (hoverRating || newReviewRating) ? '#ffbe5a' : '#ccc'}
-                      onClick={() => setNewReviewRating(starValue)}
-                      onMouseEnter={() => setHoverRating(starValue)}
-                      onMouseLeave={() => setHoverRating(0)}
-                    />
-                  );
-                })}
+            
+            {/* ФОРМА ОТЗЫВОВ - показываем только если это НЕ свой профиль и пользователь авторизован */}
+            {currentUserId && !isOwnProfile() && (
+              <div className={styles.reviewFormCustom}>
+                <h4>Оставить отзыв</h4>
+                
+                <textarea
+                  placeholder="Оставьте отзыв..."
+                  value={newReviewText}
+                  onChange={(e) => {
+                    setNewReviewText(e.target.value);
+                    // Сбрасываем ошибку при вводе текста
+                    if (e.target.value.trim() !== '') {
+                      setValidationErrors(prev => ({ ...prev, text: '' }));
+                    }
+                  }}
+                  className={`${styles.reviewTextarea} ${validationErrors.text ? styles.error : ''}`}
+                />
+                {validationErrors.text && (
+                  <div className={styles.errorMessage}>{validationErrors.text}</div>
+                )}
+                
+                <div className={styles.ratingSection}>
+                  <div className={styles.ratingStars}>
+                    {[...Array(5)].map((_, index) => {
+                      const starValue = index + 1;
+                      return (
+                        <FaStar
+                          key={index}
+                          size={24}
+                          className={styles.star}
+                          color={starValue <= (hoverRating || newReviewRating) ? '#ffbe5a' : '#ccc'}
+                          onClick={() => {
+                            setNewReviewRating(starValue);
+                            // Сбрасываем ошибку при выборе рейтинга
+                            if (starValue > 0) {
+                              setValidationErrors(prev => ({ ...prev, rating: '' }));
+                            }
+                          }}
+                          onMouseEnter={() => setHoverRating(starValue)}
+                          onMouseLeave={() => setHoverRating(0)}
+                        />
+                      );
+                    })}
+                  </div>
+                  {validationErrors.rating && (
+                    <div className={styles.errorMessage}>{validationErrors.rating}</div>
+                  )}
+                </div>
+                
+                <button 
+                  onClick={handleAddReview}
+                  className={styles.addReviewButton}
+                >
+                  Добавить отзыв
+                </button>
               </div>
-              <button onClick={handleAddReview}>Добавить отзыв</button>
-            </div>
+            )}
+
+            {/* СООБЩЕНИЕ ЕСЛИ ЭТО СВОЙ ПРОФИЛЬ */}
+            {isOwnProfile() && (
+              <div className={styles.infoMessage} style={{background: '#fff3cd', border: '1px solid #ffeaa7', padding: '15px', borderRadius: '5px', marginTop: '20px'}}>
+                <p style={{margin: '0 0 10px 0', color: '#856404', fontWeight: 'bold'}}> Вы просматриваете свой собственный профиль</p>
+                <p style={{margin: '0', color: '#856404'}}>Вы не можете оставить отзыв самому себе.</p>
+              </div>
+            )}
+
+            {/* СООБЩЕНИЕ ЕСЛИ НЕ АВТОРИЗОВАН */}
+            {!currentUserId && (
+              <div className={styles.infoMessage} style={{background: '#d1ecf1', border: '1px solid #bee5eb', padding: '15px', borderRadius: '5px', marginTop: '20px'}}>
+                <p style={{margin: '0', color: '#0c5460'}}>🔐 Чтобы оставить отзыв, необходимо <Link to="/signin" style={{color: '#007bff', textDecoration: 'underline'}}>войти в систему</Link>.</p>
+              </div>
+            )}
           </div>
         );
       default:

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import styles from './ProjectsPage.module.css';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function ProjectsPage() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8,6 +8,7 @@ export default function ProjectsPage() {
   const [selectedTopics, setSelectedTopics] = useState([]); // массив выбранных тем
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(true);
+  const navigate = useNavigate();
 
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -23,7 +24,13 @@ export default function ProjectsPage() {
       .catch(() => setLoading(false));
   }, []);
 
-  const topics = ['Верстка сайта', 'Веб-дизайн', 'Брендинг', 'Разработка логотипа'];
+  const topics = [
+    'Разработка логотипа',
+    'Разработка полиграфической продукции',
+    'Разработка сайта',
+    'Разработка дизайна сайта',
+    'Верстка сайта'
+  ];
 
   const toggleTopic = (topic) => {
     if (selectedTopics.includes(topic)) {
@@ -36,20 +43,27 @@ export default function ProjectsPage() {
   const filteredProjects = projects.filter(project => {
     const lowerSearch = searchTerm.toLowerCase();
 
+    // Поиск по всем текстовым полям кроме ID
     const matchesSearch =
       (project.title?.toLowerCase() || '').includes(lowerSearch) ||
       (project.theme?.toLowerCase() || '').includes(lowerSearch) ||
       (project.description?.toLowerCase() || '').includes(lowerSearch) ||
-      (project.cover?.toLowerCase() || '').includes(lowerSearch) ||
       (project.status?.toLowerCase() || '').includes(lowerSearch) ||
       (project.executorEmail?.toLowerCase() || '').includes(lowerSearch) ||
-      (project.performerEmail?.toLowerCase() || '').includes(lowerSearch) ||
-      (project.topic?.toLowerCase() || '').includes(lowerSearch);
+      (project.userEmail?.toLowerCase() || '').includes(lowerSearch);
 
-    const matchesTopic = selectedTopics.length === 0 || selectedTopics.includes(project.topic);
+    // Фильтрация по темам
+    const matchesTopic = selectedTopics.length === 0 || 
+                        (project.theme && selectedTopics.includes(project.theme));
 
     return matchesSearch && matchesTopic;
   });
+
+  const handleProfileClick = (e, userId) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigate(`/profileview/${userId}`);
+  };
 
   if (loading) return <p>Загрузка проектов...</p>;
 
@@ -57,7 +71,7 @@ export default function ProjectsPage() {
     <>
       <header className={styles.header}>
         <Link to="/">
-          <img src="images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
+          <img src="/images/logosmall.svg" alt="IdeaFlow logo" style={{ height: 80 }} />
         </Link>
         <nav className={styles.navLinks}>
           <Link to="/profile">Профиль</Link>
@@ -77,18 +91,18 @@ export default function ProjectsPage() {
         <div className={styles.projectsControls}>
           <button className={styles.projectsFilter} onClick={() => setFilterOpen(true)}>
             Фильтр
-            <img src="images/filter-icon.svg" alt="Фильтр" />
+            <img src="/images/filter-icon.svg" alt="Фильтр" />
           </button>
           <div className={styles.projectsSearchWrapper}>
             <input
               className={styles.projectsSearch}
               type="text"
-              placeholder="Поиск"
+              placeholder="Поиск по названию, теме, описанию..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
             <button className={styles.projectsSearchBtn}>
-              <img src="images/search-icon.svg" alt="Поиск" />
+              <img src="/images/search-icon.svg" alt="Поиск" />
             </button>
           </div>
         </div>
@@ -139,19 +153,27 @@ export default function ProjectsPage() {
                   <div>
                     Заказчик:{' '}
                     {project.userId ? (
-                      <Link to={`/profile/${project.userId}`}>
-                        {project.performerEmail || 'Не указан'}
-                      </Link>
+                      <span 
+                        className={styles.profileLink}
+                        onClick={(e) => handleProfileClick(e, project.userId)}
+                        style={{color: '#007bff', cursor: 'pointer', textDecoration: 'underline'}}
+                      >
+                        {project.userEmail || project.performerEmail || 'Не указан'}
+                      </span>
                     ) : (
-                      project.performerEmail || 'Не указан'
+                      project.userEmail || project.performerEmail || 'Не указан'
                     )}
                   </div>
                   <div>
                     Исполнитель:{' '}
                     {project.executorId ? (
-                      <Link to={`/profile/${project.executorId}`}>
+                      <span 
+                        className={styles.profileLink}
+                        onClick={(e) => handleProfileClick(e, project.executorId)}
+                        style={{color: '#007bff', cursor: 'pointer', textDecoration: 'underline'}}
+                      >
                         {project.executorEmail || 'Не указан'}
-                      </Link>
+                      </span>
                     ) : (
                       project.executorEmail || 'Не указан'
                     )}
@@ -166,7 +188,7 @@ export default function ProjectsPage() {
       <footer className={styles.footer}>
         <div className={styles.footerContainer}>
           <div className={styles.footerLogo}>
-            <img src="images/logobig.svg" alt="Big Logo" />
+            <img src="/images/logobig.svg" alt="Big Logo" />
           </div>
           <div className={styles.footerContacts}>
             Связаться с нами <br />
@@ -174,9 +196,9 @@ export default function ProjectsPage() {
             <p>+7 (123) 456-78-90</p>
           </div>
           <div className={styles.footerSocials}>
-            <a href="#"><img src="images/facebook.svg" alt="Facebook" /></a>
-            <a href="#"><img src="images/twitterx.svg" alt="Twitter" /></a>
-            <a href="#"><img src="images/instagram.svg" alt="Instagram" /></a>
+            <a href="#"><img src="/images/facebook.svg" alt="Facebook" /></a>
+            <a href="#"><img src="/images/twitterx.svg" alt="Twitter" /></a>
+            <a href="#"><img src="/images/instagram.svg" alt="Instagram" /></a>
           </div>
         </div>
         <p style={{ fontSize: 20, textAlign: 'center', marginTop: 10 }}>
