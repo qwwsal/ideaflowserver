@@ -135,15 +135,33 @@ export default function AddCasePage() {
             />
           </label>
           <label className={styles.label}>
-            Выберите тему
-            <input
-              type="text"
-              value={theme}
-              onChange={(e) => setTheme(e.target.value)}
-              required
-              className={styles.textInput}
-            />
-          </label>
+    Выберите тему
+    <input
+        list="theme-options"
+        type="text"
+        value={theme}
+        onChange={(e) => setTheme(e.target.value)}
+        placeholder="Выберите из списка или введите свой вариант"
+        required
+        className={styles.textInput}
+    />
+    <datalist id="theme-options">
+        <option value="Разработка логотипа" />
+        <option value="Разработка сайта" />
+        <option value="Верстка сайта" />
+        <option value="Разработка дизайна сайта" />
+        <option value="Разработка полиграфической продукции" />
+        <option value="Веб-разработка" />
+        <option value="Разработка мобильного приложения" />
+        <option value="Дизайн упаковки" />
+        <option value="Иллюстрация (цифровая, векторная, персонажи)" />
+        <option value="Дизайн презентаций (PowerPoint, Google Slides, Keynote)" />
+        <option value="Дизайн инфографики" />
+        <option value="Дизайн для социальных сетей (обложки, посты, сторис)" />
+        <option value="3D-моделирование и визуализация" />
+        <option value="Графический дизайн для мерча (одежда, сувениры)" />
+    </datalist>
+</label>
           <label className={styles.label}>
             Опишите детально задачу и суть проекта
             <textarea

@@ -323,21 +323,32 @@ app.put('/processed-cases/:id/complete', (req, res) => {
 app.get('/projects', (req, res) => {
   const userId = req.query.userId;
   const userEmail = req.query.userEmail;
-  // Если есть userId - получаем проекты по userId (заказчик)
-  // Если есть userEmail - получаем проекты по executorEmail (исполнитель завершенные)
-  let sql = 'SELECT * FROM Projects';
+  
+  let sql = `
+    SELECT 
+      Projects.*, 
+      Users.email as userEmail,
+      Executors.id as executorId,
+      Executors.email as executorUserEmail
+    FROM Projects 
+    LEFT JOIN Users ON Projects.userId = Users.id 
+    LEFT JOIN Users as Executors ON Projects.executorEmail = Executors.email
+  `;
   const params = [];
 
   if (userId) {
-    sql += ' WHERE userId = ?';
+    sql += ' WHERE Projects.userId = ?';
     params.push(userId);
   } else if (userEmail) {
-    sql += ' WHERE executorEmail = ? AND status = "closed"';
+    sql += ' WHERE Projects.executorEmail = ? AND Projects.status = "closed"';
     params.push(userEmail);
   }
 
   db.all(sql, params, (err, rows) => {
-    if (err) return res.status(500).json({ error: 'Ошибка при получении проектов' });
+    if (err) {
+      console.error(err);
+      return res.status(500).json({ error: 'Ошибка при получении проектов' });
+    }
     rows.forEach(row => {
       row.files = row.files ? JSON.parse(row.files) : [];
     });

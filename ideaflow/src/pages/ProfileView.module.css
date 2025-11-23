@@ -6,7 +6,7 @@ body {
 
 .header {
   background-color: #0E900E;
-  padding: 10px 126px;
+  padding: 10px 10%;
   color: #F5F5F5;
   display: flex;
   align-items: center;
@@ -29,8 +29,6 @@ body {
   cursor: pointer;
   padding: 5px;
   z-index: 1001;
-  background: none;
-  border: none;
 }
 
 .burgerMenu span {
@@ -42,51 +40,28 @@ body {
   border-radius: 2px;
 }
 
-/* Анимация бургера при открытии */
-.burgerMenuActive span:nth-child(1) {
-  transform: rotate(-45deg) translate(-5px, 6px);
-}
-
-.burgerMenuActive span:nth-child(2) {
-  opacity: 0;
-}
-
-.burgerMenuActive span:nth-child(3) {
-  transform: rotate(45deg) translate(-5px, -6px);
-}
-
 .navLinks {
   display: flex;
   align-items: center;
-  gap: 60px;
+  gap: 30px;
 }
 
 .navLinks a {
   color: #F5F5F5;
   text-decoration: none;
   white-space: nowrap;
-  font-family: 'Geoform';
-  transition: color 0.3s;
-}
-
-.navLinks a:hover {
-  color: #FBBB13;
 }
 
 .buttonYellow {
   font-family: 'Malik Trial';
-  color:#0E900E;
+  color: #0E900E;
   background-color: #FBBB13;
   border: none;
   border-radius: 12px;
   padding: 6px 14px;
   cursor: pointer;
   font-weight: 600;
-  transition: background-color 0.3s;
-}
-
-.buttonYellow:hover{
-  background-color: #e6a813;
+  white-space: nowrap;
 }
 
 /* Оверлей */
@@ -104,11 +79,8 @@ body {
 /* Мобильное меню из футера */
 .mobileFooterMenu {
   display: none;
-  margin-top: 30px;
-  width: 100%;
-  border-top: 1px solid #F5F5F5;
-  padding-top: 20px;
 }
+
 
 .centerWrapper {
   background: #F5F5F5;

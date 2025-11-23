@@ -318,35 +318,40 @@ export default function ProfilePage() {
           </>
         );
       case 'cases':
-        return (
-          <div className={`${styles.tabContent} ${styles.casesTab}`}>
-            <h3>Завершённые проекты пользователя</h3>
-            {completedExecutorProjects.length === 0 ? (
-              <p>Пока пусто</p>
-            ) : (
-              <div className={styles.casesGrid}>
-                {completedExecutorProjects.map(proj => (
-                  <div key={proj.id} className={styles.caseCard}>
-                    <Link to={`/projects/${proj.id}`} key={proj.id} className={styles.projCardLink}>
-                      <div className={styles.projectCard}>
-                        <img
-                          className={styles.projectImage}
-                          src={`http://localhost:3001${proj.cover || ''}`}
-                          alt={`Фото исполнителя ${proj.performerEmail}`}
-                        />
-                        <div className={styles.projectInfo}>
-                          <div className={styles.projectTopic}>{proj.theme || proj.title}</div>
-                          <div className={styles.projectTitle}>Название: {proj.title}</div>
-                          <div className={styles.projectStatus}>Статус: {proj.status || 'неизвестен'}</div>
-                        </div>
-                      </div>
-                    </Link>
+    // Фильтруем проекты по executorEmail текущего пользователя
+    const userCompletedProjects = completedExecutorProjects.filter(proj => 
+        proj.executorEmail === userEmail
+    );
+    
+    return (
+      <div className={`${styles.tabContent} ${styles.casesTab}`}>
+        <h3>Завершённые проекты пользователя</h3>
+        {userCompletedProjects.length === 0 ? (
+          <p>Пока пусто</p>
+        ) : (
+          <div className={styles.casesGrid}>
+            {userCompletedProjects.map(proj => (
+              <div key={proj.id} className={styles.caseCard}>
+                <Link to={`/projects/${proj.id}`} key={proj.id} className={styles.projCardLink}>
+                  <div className={styles.projectCard}>
+                    <img
+                      className={styles.projectImage}
+                      src={`http://localhost:3001${proj.cover || ''}`}
+                      alt={`Фото исполнителя ${proj.executorEmail}`}
+                    />
+                    <div className={styles.projectInfo}>
+                      <div className={styles.projectTopic}>{proj.theme || proj.title}</div>
+                      <div className={styles.projectTitle}>Название: {proj.title}</div>
+                      <div className={styles.projectStatus}>Статус: {proj.status || 'неизвестен'}</div>
+                    </div>
                   </div>
-                ))}
+                </Link>
               </div>
-            )}
+            ))}
           </div>
-        );
+        )}
+      </div>
+    );
       case 'reviews':
         return (
           <div className={styles.reviewContainer}>
@@ -513,10 +518,10 @@ export default function ProfilePage() {
 
         <div className={styles.actionButtons}>
           <button className={styles.actionButton1} onClick={() => navigate('/add-case')}>
-            Разместить проект
+            Разместить кейс
           </button>
           <button className={styles.actionButton2} onClick={() => navigate('/cases')}>
-            Приступить к проекту
+            Выполнить кейс
           </button>
           <button className={styles.logoutButton} onClick={handleLogout}>
             Выйти из профиля

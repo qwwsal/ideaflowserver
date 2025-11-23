@@ -397,6 +397,29 @@ p {
   }
 }
 
+
+.selectInput {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 16px;
+    margin-top: 5px;
+}
+
+.selectInput:focus {
+    outline: none;
+    border-color: #007bff;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.3);
+}
+
+/* Мобильная адаптация */
+@media (max-width: 768px) {
+    .selectInput {
+        padding: 12px;
+        font-size: 16px;
+    }
+}
 /* Очень маленькие экраны */
 @media (max-width: 360px) {
   .innerContainer {
