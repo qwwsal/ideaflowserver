@@ -12,7 +12,6 @@ app.use(express.json());
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
-    // Проверяем подключение к базе
     await db.query('SELECT 1');
     res.json({ 
       status: 'OK', 
@@ -119,10 +118,9 @@ app.get('/api/projects', async (req, res) => {
   }
 });
 
-// Test endpoint - создаем тестовые данные
+// Test endpoint
 app.post('/api/test-data', async (req, res) => {
   try {
-    // Создаем тестового пользователя
     const hash = await bcrypt.hash('test123', 10);
     const userResult = await db.query(
       'INSERT INTO Users (email, password, firstName, lastName) VALUES ($1, $2, $3, $4) RETURNING id',
@@ -131,7 +129,6 @@ app.post('/api/test-data', async (req, res) => {
     
     const userId = userResult.rows[0].id;
     
-    // Создаем тестовый кейс
     await db.query(
       'INSERT INTO Cases (userId, title, theme, description) VALUES ($1, $2, $3, $4)',
       [userId, 'Тестовый кейс', 'Разработка', 'Описание тестового кейса']
@@ -144,4 +141,5 @@ app.post('/api/test-data', async (req, res) => {
   }
 });
 
+// ВАЖНО: Для Vercel нужно экспортировать app
 module.exports = app;
