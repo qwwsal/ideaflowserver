@@ -1,193 +1,124 @@
-const sqlite3 = require('sqlite3').verbose();
-const path = require('path');
-const fs = require('fs');
+const { Pool } = require('pg');
 
-// Для Vercel используем /tmp для хранения БД (единственное доступное место для записи)
-// Для локальной разработки используем обычный путь
-const dbPath = process.env.NODE_ENV === 'production' 
-  ? '/tmp/mydatabase.db'
-  : path.join(__dirname, 'mydatabase.db');
-
-// Создаем папку если нужно (особенно важно для Vercel /tmp)
-const dir = path.dirname(dbPath);
-if (!fs.existsSync(dir)) {
-  fs.mkdirSync(dir, { recursive: true });
-  console.log('Created database directory:', dir);
-}
-
-const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Ошибка при открытии базы данных:', err.message);
-  } else {
-    console.log('База данных успешно открыта:', dbPath);
-    initializeDatabase();
-  }
+// Используем pooled connection для Vercel
+const pool = new Pool({
+  connectionString: process.env.DATABASE_URL,
+  ssl: {
+    rejectUnauthorized: false
+  },
+  max: 20, // максимальное количество клиентов в пуле
+  idleTimeoutMillis: 30000,
+  connectionTimeoutMillis: 2000,
 });
 
-function initializeDatabase() {
-  db.serialize(() => {
-    db.run(`
+// Функция для инициализации базы данных
+async function initializeDatabase() {
+  const client = await pool.connect();
+  try {
+    console.log('🚀 Initializing Neon PostgreSQL database...');
+    
+    await client.query('BEGIN');
+
+    // Users table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS Users (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        email TEXT UNIQUE NOT NULL,
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) UNIQUE NOT NULL,
         password TEXT NOT NULL,
-        firstName TEXT,
-        lastName TEXT,
+        firstName VARCHAR(100),
+        lastName VARCHAR(100),
         photo TEXT,
         description TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) console.error('Ошибка создания таблицы Users:', err.message);
-      else console.log('Таблица Users готова');
-    });
+    `);
 
-    db.run(`
+    // Cases table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS Cases (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         userId INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        theme TEXT,
+        title VARCHAR(255) NOT NULL,
+        theme VARCHAR(100),
         description TEXT,
         cover TEXT,
-        files TEXT,
-        status TEXT DEFAULT 'open',
+        files JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'open',
         executorId INTEGER,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(userId) REFERENCES Users(id)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) console.error('Ошибка создания таблицы Cases:', err.message);
-      else console.log('Таблица Cases готова');
-    });
+    `);
 
-    db.run(`
+    // ProcessedCases table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS ProcessedCases (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         caseId INTEGER NOT NULL,
         userId INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        theme TEXT,
+        title VARCHAR(255) NOT NULL,
+        theme VARCHAR(100),
         description TEXT,
         cover TEXT,
-        files TEXT,
-        status TEXT DEFAULT 'in_process',
+        files JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'in_process',
         executorId INTEGER,
-        executorEmail TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(caseId) REFERENCES Cases(id),
-        FOREIGN KEY(userId) REFERENCES Users(id)
+        executorEmail VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) console.error('Ошибка создания таблицы ProcessedCases:', err.message);
-      else console.log('Таблица ProcessedCases готова');
-    });
+    `);
 
-    db.run(`
+    // Projects table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS Projects (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         caseId INTEGER NOT NULL,
         userId INTEGER NOT NULL,
-        title TEXT NOT NULL,
-        theme TEXT,
+        title VARCHAR(255) NOT NULL,
+        theme VARCHAR(100),
         description TEXT,
         cover TEXT,
-        files TEXT,
-        status TEXT DEFAULT 'closed',
-        executorEmail TEXT,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(userId) REFERENCES Users(id),
-        FOREIGN KEY(caseId) REFERENCES Cases(id)
+        files JSONB DEFAULT '[]',
+        status VARCHAR(50) DEFAULT 'closed',
+        executorEmail VARCHAR(255),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) console.error('Ошибка создания таблицы Projects:', err.message);
-      else console.log('Таблица Projects готова');
-    });
+    `);
 
-    db.run(`
+    // Reviews table
+    await client.query(`
       CREATE TABLE IF NOT EXISTS Reviews (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        id SERIAL PRIMARY KEY,
         userId INTEGER NOT NULL,
         reviewerId INTEGER NOT NULL,
-        reviewerName TEXT,
+        reviewerName VARCHAR(100),
         reviewerPhoto TEXT,
         text TEXT NOT NULL,
-        rating INTEGER NOT NULL,
-        created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-        FOREIGN KEY(userId) REFERENCES Users(id),
-        FOREIGN KEY(reviewerId) REFERENCES Users(id)
+        rating INTEGER NOT NULL CHECK (rating >= 1 AND rating <= 5),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
-    `, (err) => {
-      if (err) console.error('Ошибка создания таблицы Reviews:', err.message);
-      else console.log('Таблица Reviews готова');
-    });
+    `);
 
-    // Проверяем и добавляем отсутствующие колонки
-    setTimeout(() => {
-      checkAndAddColumns();
-    }, 1000);
-  });
+    await client.query('COMMIT');
+    console.log('✅ All tables created successfully');
+  } catch (error) {
+    await client.query('ROLLBACK');
+    console.error('❌ Database initialization error:', error);
+  } finally {
+    client.release();
+  }
 }
 
-function checkAndAddColumns() {
-  // Проверяем наличие колонки executorId в ProcessedCases
-  db.all("PRAGMA table_info(ProcessedCases)", (err, rows) => {
-    if (err) return;
-    
-    const hasExecutorId = rows.some(row => row.name === 'executorId');
-    if (!hasExecutorId) {
-      db.run("ALTER TABLE ProcessedCases ADD COLUMN executorId INTEGER", (err) => {
-        if (err) console.error('Ошибка при добавлении executorId:', err.message);
-        else console.log('Колонка executorId добавлена в ProcessedCases');
-      });
-    }
-  });
-
-  // Проверяем наличие колонки reviewerId в Reviews
-  db.all("PRAGMA table_info(Reviews)", (err, rows) => {
-    if (err) return;
-    
-    const hasReviewerId = rows.some(row => row.name === 'reviewerId');
-    if (!hasReviewerId) {
-      db.run("ALTER TABLE Reviews ADD COLUMN reviewerId INTEGER", (err) => {
-        if (err) console.error('Ошибка при добавлении reviewerId:', err.message);
-        else console.log('Колонка reviewerId добавлена в Reviews');
-      });
-    }
-  });
-
-  // Проверяем наличие колонки created_at во всех таблицах
-  const tables = ['Users', 'Cases', 'ProcessedCases', 'Projects', 'Reviews'];
-  tables.forEach(table => {
-    db.all(`PRAGMA table_info(${table})`, (err, rows) => {
-      if (err) return;
-      
-      const hasCreatedAt = rows.some(row => row.name === 'created_at');
-      if (!hasCreatedAt) {
-        db.run(`ALTER TABLE ${table} ADD COLUMN created_at DATETIME DEFAULT CURRENT_TIMESTAMP`, (err) => {
-          if (err) console.error(`Ошибка при добавлении created_at в ${table}:`, err.message);
-          else console.log(`Колонка created_at добавлена в ${table}`);
-        });
-      }
-    });
-  });
-}
-
-// Обработка ошибок БД
-db.on('error', (err) => {
-  console.error('Database error:', err);
+// Инициализируем базу при старте
+pool.on('connect', () => {
+  console.log('🔗 Connected to Neon PostgreSQL');
+  initializeDatabase();
 });
 
-// Graceful shutdown
-process.on('SIGINT', () => {
-  db.close((err) => {
-    if (err) {
-      console.error('Ошибка при закрытии БД:', err.message);
-    } else {
-      console.log('База данных закрыта');
-    }
-    process.exit(0);
-  });
+pool.on('error', (err) => {
+  console.error('💥 PostgreSQL pool error:', err);
 });
 
-module.exports = db;
+module.exports = {
+  query: (text, params) => pool.query(text, params),
+  getClient: () => pool.connect()
+};
